@@ -1,4 +1,10 @@
-
+# Add this block for ROS python conflict
+import sys
+try:
+    sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+    sys.path.remove('$HOME/segway_kinetic_ws/devel/lib/python2.7/dist-packages')
+except ValueError:
+    pass
 import cv2
 import numpy as np
 from pulse import Pulse
@@ -22,7 +28,7 @@ class RunPOS():
 
     def __call__(self, source):
         time1=time.time()
-        
+
         mask_process_pipe, chil_process_pipe = mp.Pipe()
         self.plot_pipe = None
         if self.plot:
@@ -30,19 +36,22 @@ class RunPOS():
             self.plotter = DynamicPlot(self.signal_size, self.batch_size)
             self.plot_process = mp.Process(target=self.plotter, args=(plotter_pipe,), daemon=True)
             self.plot_process.start()
-        
+
+        print("make process_mask")
         process_mask = ProcessMasks(self.signal_size, self.frame_rate, self.batch_size)
 
+        print("mask_processer")
         mask_processer = mp.Process(target=process_mask, args=(chil_process_pipe, self.plot_pipe, source, ), daemon=True)
         mask_processer.start()
-        
+
+        print("CaptureFrames")
         capture = CaptureFrames(self.batch_size, source, show_mask=True)
         capture(mask_process_pipe, source)
 
+        print("mask_processer.join()")
         mask_processer.join()
         if self.plot:
             self.plot_process.join()
-        time2=time.time()
         time2=time.time()
         print(f'time {time2-time1}')
 
@@ -57,10 +66,10 @@ def get_args():
 
     (options, _) = parser.parse_args()
     return options
-        
+
 if __name__=="__main__":
     args = get_args()
+    # print("args = ", args)  # args =  {'source': '0', 'batchsize': 30, 'framerate': '25'}
     source = args.source
     runPOS = RunPOS(270, args.framerate, args.batchsize, True)
     runPOS(source)
-    

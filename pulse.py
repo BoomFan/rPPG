@@ -9,7 +9,7 @@ from torchvision import transforms
 import pdb
 from PIL import Image
 
-PRE_STEP_ASF = False  
+PRE_STEP_ASF = False
 PRE_STEP_CDF = False
 
 class Pulse():
@@ -20,24 +20,24 @@ class Pulse():
         self.minFreq = 0.9 #
         self.maxFreq = 3 #
         self.fft_spec = []
-        
+
     def get_pulse(self, mean_rgb):
         seg_t = 3.2
         l = int(self.framerate * seg_t)
         H = np.zeros(self.signal_size)
 
         B = [int(0.8 // (self.framerate / l)), int(4 // (self.framerate / l))]
-                
+
         for t in range(0, (self.signal_size - l + 1)):
             # pre processing steps
             C = mean_rgb[t:t+l,:].T
 
             if PRE_STEP_CDF:
                 C = CDF(C, B)
-           
+
             if PRE_STEP_ASF:
                 C = ASF(C)
-           
+
             # POS
             mean_color = np.mean(C, axis=1)
             diag_mean_color = np.diag(mean_color)
